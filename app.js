@@ -10,10 +10,23 @@ const app = express();
 const server = http.createServer(app);
 // 생서된 서버를 socket.io에 바인딩
 const io = socket(server);
+// Node.js 기본 내장 모듈 불러오기
+const fs = require('fs');
+
+app.use('/css', express.static('./static/css'));
+app.use('/js', express.static('./static/js'));
+
 // Get 방식으로 / 경로에 접속하면 실행 됨
 app.get('/', function(request, response){
-    console.log('유저가 / 으로 접속하였습니다!');
-    response.send('Hello, Express Server!!');
+    fs.readFile('./static/index.html', function(err, data){
+        if(err){
+            response.send(`에러 : ${err}`);
+        } else {
+            response.writeHead(200, {'Content-Type':'text/html'});
+            response.write(data);
+            response.end();
+        }
+    })
 })
 // 서버를 8080포트로 listen
 server.listen(8080, function(){
