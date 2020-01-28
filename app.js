@@ -30,15 +30,26 @@ app.get('/', function(request, response){
 })
 
 io.sockets.on('connection', function(socket){
-    console.log('유저 접속 됨');
-    //console.log(socket);
 
-    socket.on('send', function(data){
-        console.log('전달된 메시지: ', data.msg);
+    socket.on('newUser', function(name){
+        // 소켓에 이름 저장해두기
+        socket.name = name;
+
+        // 모든 소캣에게 전송
+        io.sockets.emit('update', {type: 'connect', name: 'SERVER', message: `${name} 님이 접속하였습니다.`});
+    });
+
+    socket.on('message', function(data){
+        // 받은 데이터에 누가 보냈는지 이름을 추가
+        data.name = socket.name;
+
+        // 보낸 사람을 제외한 나머지 유저에게 메시지 전송
+        socket.broadcast.emit('update', data);
     });
 
     socket.on('disconnect', function(){
-        console.log('접속 종료');
+        // 나가는 사람을 제외한 나머지 유저에게 메시지 전송
+        socket.broadcast.emit('update', {type: 'disconnect', name: 'SERVER', message: `${socket.name} 님이 나가셨습니다.`});
     });
 })
 // 서버를 8080포트로 listen
